@@ -94,10 +94,22 @@ footer = st.container()
 footer.write("""<div class='fixed-footer'/>""", unsafe_allow_html=True)
 
 with footer:
-    uploaded_file = st.file_uploader('', type=["jpg", "jpeg", "png"])
-    
-    if uploaded_file is not None:
-        st.session_state.messages.append({"role": "user", "content": "User uploaded an image"})
+    if img_prompt := st.file_uploader('', type=["jpg", "jpeg", "png"]):
+        st.session_state.messages.append({"role": "user", "content": img_prompt})
         with st.chat_message("user"):
-            st.image(uploaded_file, use_column_width=True)
+            st.image(img_prompt, use_column_width='auto')
+        with st.chat_message("assistant"):
+            stream = client.chat.completions.create(
+                model=st.session_state["openai_model"],
+                messages=[{
+                    "role": m["role"],
+                    "content": m["content"]
+                } for m in st.session_state.messages],
+                stream=True,
+            )
+            response = st.write_stream(stream)
+        st.session_state.messages.append({
+            "role": "assistant",
+            "content": response
+        })
 st.markdown('</div>', unsafe_allow_html=True)
