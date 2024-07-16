@@ -2,6 +2,7 @@ from openai import OpenAI
 import streamlit as st
 import os
 
+client = OpenAI(api_key=os.environ['OPENAI_API_KEY'])
 
 def reset():
     st.session_state.messages = [{
@@ -20,27 +21,18 @@ def reset():
         """
     }]
 
-
+bc = st.get_option("theme.backgroundColor")
 st.markdown("""
 <style>
     div[data-testid="stVerticalBlock"] div:has(div.fixed-header) {
         position: sticky;
         top: 2rem;
         z-index: 999;
-        width: 100%;
+        width: 100%;        
+        background-color: """ + bc + """;
     }
     .fixed-header {
-    }
-    div[data-testid="stVerticalBlock"] div:has(div.fixed-footer) {
-        position: sticky;
-        bottom: 7rem;
-        z-index: 999;
-        width: 100%;
-    }
-    .fixed-footer {
-        border-bottom: 0px solid black;
-        position: absolute;
-        bottom: 0px;
+        """ + bc + """
     }
 </style>
     """,
@@ -48,9 +40,7 @@ st.markdown("""
 
 header = st.container()
 header.title("DocGPT - Healthcare Assistant")
-header.write("""<div class='fixed-header'/>""", unsafe_allow_html=True)
-
-client = OpenAI(api_key=os.environ['OPENAI_API_KEY'])
+header.write("""<div class='fixed-header'>""", unsafe_allow_html=True)
 
 if "openai_model" not in st.session_state:
     st.session_state["openai_model"] = "gpt-3.5-turbo"
@@ -59,20 +49,29 @@ if "messages" not in st.session_state:
     reset()
 
 with header:
-    button_row = st.columns([38, 8])
+    button_row = st.columns([30, 7], vertical_alignment="center")
+    with button_row[0]:
+        img_prompt = st.file_uploader('', type=["jpg", "jpeg", "png"])
     with button_row[1]:
         if st.button("Clear Chat"):
             reset()
+header.write("""</div>""", unsafe_allow_html=True)
+
 
 for message in st.session_state.messages:
     if message["role"] != "system":
         with st.chat_message(message["role"]):
                 st.markdown(message["content"])
 
-if prompt := st.chat_input("Ask me anything!"):
+prompt = st.chat_input("Ask me anything!")
+
+if prompt or img_prompt:
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
-        st.markdown(prompt)
+        if prompt:
+            st.markdown(prompt)
+        elif img_prompt:
+            st.image(img_prompt, use_column_width='auto')
 
     with st.chat_message("assistant"):
         stream = client.chat.completions.create(
@@ -88,28 +87,3 @@ if prompt := st.chat_input("Ask me anything!"):
         "role": "assistant",
         "content": response
     })
-
-
-footer = st.container()
-footer.write("""<div class='fixed-footer'/>""", unsafe_allow_html=True)
-
-with footer:
-    if img_prompt := st.file_uploader('', type=["jpg", "jpeg", "png"]):
-        st.session_state.messages.append({"role": "user", "content": img_prompt})
-        with st.chat_message("user"):
-            st.image(img_prompt, use_column_width='auto')
-        with st.chat_message("assistant"):
-            stream = client.chat.completions.create(
-                model=st.session_state["openai_model"],
-                messages=[{
-                    "role": m["role"],
-                    "content": m["content"]
-                } for m in st.session_state.messages],
-                stream=True,
-            )
-            response = st.write_stream(stream)
-        st.session_state.messages.append({
-            "role": "assistant",
-            "content": response
-        })
-st.markdown('</div>', unsafe_allow_html=True)
