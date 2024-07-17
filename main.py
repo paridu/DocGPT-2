@@ -68,36 +68,25 @@ for message in st.session_state.messages:
 
 prompt = st.chat_input("Ask me anything!")
 
-
-def encode_image(image):
-  return base64.b64encode(image).decode('utf-8')
-
 base64_image = None 
 
 if img_prompt:
     base64_image = encode_image(img_prompt)
+    img_type = img_prompt.type
+    img_url = f"data:{img_type};base64,{base64_image}"
 
 if prompt or img_prompt:
     if prompt:
         st.session_state.messages.append({"role": "user", "content": prompt})
-        st.session_state["openai_model"] = "gpt-3.5-turbo"
-
     elif img_prompt:
-        st.session_state.messages.append({"role": "user", 
-                                          "content":[
-                                          {
-                                              "type": "text",
-                                              "text": "Describe this picture:"
-                                          },
-                                          {
-                                              "type": "image_url",
-                                              "image_url": {
-                                                  "url": f"data:image/jpeg;base64{base64_image}"
-                                              }
-                                          }] 
-                                         })
-        st.session_state["openai_model"] = "gpt-4o"
-    
+        st.session_state.messages.append({
+            "role": "user", 
+            "content": [
+                {"type": "text", "text": "The patient has uploaded a picture. Please describe what you see, any problems relating to the symptoms they described, and suggest how they can fix the problem."},
+                {"type": "image_url", "image_url": {"url": img_url}}
+            ]
+        })
+
     with st.chat_message("user"):
         if prompt:
             st.markdown(prompt)
