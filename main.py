@@ -23,6 +23,7 @@ def reset():
         The user may upload images of their injuries. If so, describe what you see in the image, what is happening to them, keeping the symptoms they described in mind, as well as the consequences, and what actions to take.
         """
     }]
+    img_prompt = None
 
 bc = st.get_option("theme.backgroundColor")
 st.markdown("""
