@@ -20,7 +20,7 @@ def reset():
         After a diagnosis is made, recommend medications if they are applicable. You can provide home remedies only if the medications are not typical in a household OR if the user specifies they can't access them at the current time.
         If the patient sounds worried, write an empathetic and supportive message to provide reassurance.
         Use the previous messages provided by the patient / yourself in order to give a more informed response.
-        The user may provide you with images or videos of their injuries. If so, please describe what you see in the image, what is happening to them, the consequences, and what actions to take. Please be compassionate when doing this and try to soothe the patient's pain.
+        The user may upload images of their injuries. If so, describe what you see in the image, what is happening to them, keeping the symptoms they described in mind, as well as the consequences, and what actions to take.
         """
     }]
 
@@ -86,7 +86,6 @@ if prompt or img_prompt:
         st.session_state.messages.append({
             "role": "user", 
             "content": [
-                {"type": "text", "text": "The patient has uploaded a picture. Please describe what you see, any problems relating to the symptoms they described, and suggest how they can fix the problem."},
                 {"type": "image_url", "image_url": {"url": img_url}}
             ]
         })
@@ -112,3 +111,7 @@ if prompt or img_prompt:
         "role": "assistant",
         "content": response
     })
+
+    if img_prompt:
+        st.session_state.messages.pop(-2)
+        st.session_state["openai_model"] = "gpt-3.5-turbo"
