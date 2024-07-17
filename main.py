@@ -90,6 +90,7 @@ if prompt or img_prompt:
                 {"type": "image_url", "image_url": {"url": img_url}}
             ]
         })
+        st.session_state["openai_model"] = "gpt-4o"
 
     with st.chat_message("user"):
         if prompt:
