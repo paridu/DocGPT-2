@@ -70,8 +70,10 @@ if prompt or img_prompt:
     with st.chat_message("user"):
         if prompt:
             st.markdown(prompt)
+            st.session_state["openai_model"] = "gpt-3.5-turbo"
         elif img_prompt:
             st.image(img_prompt, use_column_width='auto')
+            st.session_state["openai_model"] = "gpt-4o"
 
     with st.chat_message("assistant"):
         stream = client.chat.completions.create(
