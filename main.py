@@ -69,9 +69,8 @@ for message in st.session_state.messages:
 prompt = st.chat_input("Ask me anything!")
 
 
-def encode_image(image_path):
-  with open(image_path, "rb") as image_file:
-    return base64.b64encode(image_file.read()).decode('utf-8')
+def encode_image(image):
+  return base64.b64encode(image).decode('utf-8')
 
 base64_image = None 
 
