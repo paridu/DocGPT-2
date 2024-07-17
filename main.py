@@ -1,8 +1,9 @@
 from openai import OpenAI
 import streamlit as st
 import os
-import numpy as np
 from PIL import Image
+import base64
+from mimetypes import guess_type
 
 client = OpenAI(api_key=os.environ['OPENAI_API_KEY'])
 
@@ -67,23 +68,42 @@ for message in st.session_state.messages:
 
 prompt = st.chat_input("Ask me anything!")
 
+
+def encode_image(image_path):
+  with open(image_path, "rb") as image_file:
+    return base64.b64encode(image_file.read()).decode('utf-8')
+
+base64_image = None 
+
 if img_prompt:
-    image = Image.open(img_prompt)
-    img_array = np.array(image)
+    base64_image = encode_image(img_prompt)
 
 if prompt or img_prompt:
     if prompt:
         st.session_state.messages.append({"role": "user", "content": prompt})
+        st.session_state["openai_model"] = "gpt-3.5-turbo"
+
     elif img_prompt:
-        st.session_state.messages.append({"role": "user", "content": img_array})
+        st.session_state.messages.append({"role": "user", 
+                                          "content":[
+                                          {
+                                              "type": "text",
+                                              "text": "Describe this picture:"
+                                          },
+                                          {
+                                              "type": "image_url",
+                                              "image_url": {
+                                                  "url": f"data:image/jpeg;base64{base64_image}"
+                                              }
+                                          }] 
+                                         })
+        st.session_state["openai_model"] = "gpt-4o"
     
     with st.chat_message("user"):
         if prompt:
             st.markdown(prompt)
-            st.session_state["openai_model"] = "gpt-3.5-turbo"
         elif img_prompt:
             st.image(img_prompt, use_column_width='auto')
-            st.session_state["openai_model"] = "gpt-4o"
 
     with st.chat_message("assistant"):
         stream = client.chat.completions.create(
