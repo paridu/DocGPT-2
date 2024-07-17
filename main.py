@@ -1,6 +1,8 @@
 from openai import OpenAI
 import streamlit as st
 import os
+import numpy as np
+from PIL import Image
 
 client = OpenAI(api_key=os.environ['OPENAI_API_KEY'])
 
@@ -65,8 +67,16 @@ for message in st.session_state.messages:
 
 prompt = st.chat_input("Ask me anything!")
 
+if img_prompt:
+    image = Image.open(img_prompt)
+    img_array = np.array(image)
+
 if prompt or img_prompt:
-    st.session_state.messages.append({"role": "user", "content": prompt})
+    if prompt:
+        st.session_state.messages.append({"role": "user", "content": prompt})
+    elif img_prompt:
+        st.session_state.messages.append({"role": "user", "content": img_array})
+    
     with st.chat_message("user"):
         if prompt:
             st.markdown(prompt)
