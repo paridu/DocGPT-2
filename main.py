@@ -6,33 +6,18 @@ from streamlit.elements.image import UseColumnWith
 from streamlit_mic_recorder import speech_to_text
 from streamlit_geolocation import streamlit_geolocation
 from streamlit_extras.stylable_container import stylable_container
+from streamlit_modal import Modal
 
-client = OpenAI(api_key=os.environ['OPENAI_API_KEY'])
-sys_prompt = open("prompt.txt").read()
-st.markdown(
-    '''
-    <style>
-        div[data-testid="stAppViewBlockContainer"] {
-            padding-top: 1.5rem;
-            padding-bottom: 0px;
-        }
-        div[data-testid="stHorizontalBlock"] {
-            padding-top: 1rem;
-            padding-bottom: 0px;
-        }
-        e1f1d6gn2 {
-            color: transparent;
-        }
-    </style>
-    ''', unsafe_allow_html=True)
+CLIENT = OpenAI(api_key=os.environ['OPENAI_API_KEY'])
+SYS_PROMPT = open('prompt.txt').read()
+LOGO_PATH = 'assets/logo.png'
     
 def clear_chat():
     st.session_state.current_session = [{
         "role": "system",
-        "content": sys_prompt
+        "content": SYS_PROMPT
     }]
     st.session_state.my_stt_output = None
-    # st.rerun()
 
 
 def initialize_session():
@@ -53,17 +38,14 @@ def initialize_session():
     if "uploaded_images" not in st.session_state:
         st.session_state.uploaded_images = []
 
-
 def encode_image_url(image):
     base64_image = base64.b64encode(image.read()).decode('utf-8')
     img_type = image.type
     return f"data:{img_type};base64,{base64_image}"
 
-
 def speech_to_text_callback():
     if st.session_state.my_stt_output:
         st.write(st.session_state.my_stt_output)
-
 
 def save_current_chat():
     sessions = st.session_state.chat_sessions
@@ -71,7 +53,6 @@ def save_current_chat():
     if len(curr_session) > 1:
         title = curr_session[1]["content"]
         sessions[title] = curr_session
-
 
 def load_chat(session):
     if session != st.session_state.current_session:
@@ -82,7 +63,6 @@ def load_chat(session):
                     st.markdown(message["content"])
         st.session_state.curr_session = session
 
-
 def delete_current_chat():
     if len(st.session_state.current_session) > 1:
         st.session_state.chat_sessions.pop(
@@ -92,17 +72,35 @@ def delete_current_chat():
     if not len(st.session_state.chat_sessions):
         clear_chat()
 
-
 def update_sidebar():
     with st.sidebar:
         for title in st.session_state.chat_sessions:
             if st.button(title, key=title, type='primary'):
                 load_chat(st.session_state.chat_sessions[title])
 
-
 def main():
+    st.markdown(
+        '''
+        <style>
+            div[data-testid="stAppViewBlockContainer"] {
+                padding-top: 1.5rem;
+                padding-bottom: 0px;
+            }
+            div[data-testid="stHorizontalBlock"] {
+                padding-top: 1rem;
+                padding-bottom: 0px;
+            }
+            e1f1d6gn2 {
+                color: transparent;
+            }
+        </style>
+        ''', unsafe_allow_html=True)
+
+    
     ### SIDEBAR ###
     with st.sidebar:
+        if st.button("Enter basic details", type='primary'):
+            enter_details()
         if st.button("Delete current chat", type='primary'):
             delete_current_chat()
         if st.button("Create new chat", type='primary'):
@@ -137,7 +135,7 @@ def main():
                     "logo",
                     css_styles="""button[title="View fullscreen"]{
             visibility: hidden;}"""):
-                st.image('assets/logo.png', use_column_width=True)
+                st.image(LOGO_PATH, use_column_width=True)
     header.write("""</div>""", unsafe_allow_html=True)
 
     ### INPUT CONTAINER ###
@@ -198,7 +196,7 @@ def main():
                 if img_prompt:
                     st.markdown("Uploaded image")
             with st.spinner('Processing...'), st.chat_message("assistant"):
-                stream = client.chat.completions.create(
+                stream = CLIENT.chat.completions.create(
                     model=st.session_state["openai_model"],
                     messages=[{
                         "role": m["role"],
