@@ -2004,6 +2004,26 @@ files = [
 ]
 
 [[package]]
+name = "speechrecognition"
+version = "3.10.4"
+description = "Library for performing speech recognition, with support for several engines and APIs, online and offline."
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "SpeechRecognition-3.10.4-py2.py3-none-any.whl", hash = "sha256:723b8155692a8ed11a30013f15f89a3e57c5dc8bc73c8cb024bf9bd14c21fba5"},
+    {file = "speechrecognition-3.10.4.tar.gz", hash = "sha256:986bafcf61f14625c2f3cea6a471838edd379ed68aeed7b8f3c0fb41e21f1125"},
+]
+
+[package.dependencies]
+requests = ">=2.26.0"
+typing-extensions = "*"
+
+[package.extras]
+dev = ["flake8", "rstcheck"]
+whisper-api = ["openai"]
+whisper-local = ["openai-whisper", "soundfile"]
+
+[[package]]
 name = "st-annotated-text"
 version = "4.0.1"
 description = "A simple component to display annotated text in Streamlit apps."
@@ -2185,6 +2205,21 @@ files = [
 [package.dependencies]
 jinja2 = "*"
 streamlit = ">=1.2"
+
+[[package]]
+name = "streamlit-mic-recorder"
+version = "0.0.8"
+description = "Streamlit component that allows to record mono audio from the user's microphone, and/or perform speech recognition directly."
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "streamlit_mic_recorder-0.0.8-py3-none-any.whl", hash = "sha256:acbd5ed868dba083d567341c85f1740ae42bd03259c2780dce7f69d5bc109ac8"},
+    {file = "streamlit_mic_recorder-0.0.8.tar.gz", hash = "sha256:5a29a98f3bd1582f9d5d90911ef498b32244863d646759c2f5ceec515befb6cf"},
+]
+
+[package.dependencies]
+SpeechRecognition = "*"
+streamlit = ">=0.63"
 
 [[package]]
 name = "streamlit-modal"
@@ -2406,4 +2441,4 @@ watchmedo = ["PyYAML (>=3.10)"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10.0,<3.12"
-content-hash = "321327b7e04c2f77b495c0bc615b7aafa1a0d067a7b86154b0619a395896321f"
+content-hash = "6e5e248214037d7c47ce1ede53207ce46ab9d3fe8037a18e2128d36e22005ebd"
