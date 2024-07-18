@@ -234,9 +234,9 @@ def check_nearest_clinics():
 def main():
     st.markdown("""
         <style> 
-        .eeusbqq4:nth-child(odd){background-color:#6096BA}
-        .eeusbqq4:nth-child(even){background-color:#A3CEF1}
-        .eeusbqq4:nth-last-child(1){background-color:#A3CEF1}
+        .eeusbqq4:nth-child(odd){background-color:#D9EEFF}
+        .eeusbqq4:nth-child(even){background-color:white}
+        .eeusbqq4:nth-last-child(1){background-color:white}
         div[data-testid="stVerticalBlock"] div:has(div.fixed-header) {
             position: sticky;
             bottom: 0rem;
