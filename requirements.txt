@@ -54,7 +54,6 @@ mdurl==0.1.2
 more-itertools==10.3.0
 multidict==6.0.5
 mypy-extensions==1.0.0
-numpy==2.0.0
 openai==1.35.14
 orjson==3.10.6
 packaging==24.1
