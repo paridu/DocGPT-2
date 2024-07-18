@@ -110,6 +110,20 @@ files = [
 ]
 
 [[package]]
+name = "branca"
+version = "0.7.2"
+description = "Generate complex HTML+JS pages with Python"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "branca-0.7.2-py3-none-any.whl", hash = "sha256:853a359c34d08fd06498be762d8be9932750db4049cac11e25dd6f23562e25c2"},
+    {file = "branca-0.7.2.tar.gz", hash = "sha256:ca4c94643ef31b819987ca5bd19c6009ea17b440baa3aac04628545f7a4da023"},
+]
+
+[package.dependencies]
+jinja2 = ">=3"
+
+[[package]]
 name = "cachetools"
 version = "5.4.0"
 description = "Extensible memoizing collections and decorators"
@@ -427,6 +441,27 @@ files = [
 docs = ["furo (>=2023.9.10)", "sphinx (>=7.2.6)", "sphinx-autodoc-typehints (>=1.25.2)"]
 testing = ["covdefaults (>=2.3)", "coverage (>=7.3.2)", "diff-cover (>=8.0.1)", "pytest (>=7.4.3)", "pytest-asyncio (>=0.21)", "pytest-cov (>=4.1)", "pytest-mock (>=3.12)", "pytest-timeout (>=2.2)", "virtualenv (>=20.26.2)"]
 typing = ["typing-extensions (>=4.8)"]
+
+[[package]]
+name = "folium"
+version = "0.17.0"
+description = "Make beautiful maps with Leaflet.js & Python"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "folium-0.17.0-py2.py3-none-any.whl", hash = "sha256:14210d054e9afad6ebac037495508297d78805fcfa16f859fdee10bb7f85c2c1"},
+    {file = "folium-0.17.0.tar.gz", hash = "sha256:48385df9a3f6ceca23647c2e8d87850c8a6e05b40db63266e7b8c6d2d734d4c6"},
+]
+
+[package.dependencies]
+branca = ">=0.6.0"
+jinja2 = ">=2.9"
+numpy = "*"
+requests = "*"
+xyzservices = "*"
+
+[package.extras]
+testing = ["pytest"]
 
 [[package]]
 name = "fonttools"
@@ -2177,6 +2212,23 @@ streamlit = "*"
 streamlit-extras = "*"
 
 [[package]]
+name = "streamlit-folium"
+version = "0.21.1"
+description = "Render Folium objects in Streamlit"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "streamlit_folium-0.21.1-py3-none-any.whl", hash = "sha256:d7c71024bece3b7739f3438d56310153bf5fcb4879c548b5617ddaa2e2a06244"},
+    {file = "streamlit_folium-0.21.1.tar.gz", hash = "sha256:b5e940495efd21d71b93ccc7eeed7f1647e2a589bacec5c7e8339c583c3fa371"},
+]
+
+[package.dependencies]
+branca = "*"
+folium = ">=0.13,<0.15.0 || >0.15.0"
+jinja2 = "*"
+streamlit = ">=1.13.0"
+
+[[package]]
 name = "streamlit-image-coordinates"
 version = "0.1.9"
 description = "Streamlit component that displays an image and returns the coordinates when you click on it"
@@ -2190,6 +2242,20 @@ files = [
 [package.dependencies]
 jinja2 = "*"
 streamlit = ">=1.2"
+
+[[package]]
+name = "streamlit-js-eval"
+version = "0.1.7"
+description = "A custom Streamlit component to evaluate arbitrary Javascript expressions."
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "streamlit_js_eval-0.1.7-py3-none-any.whl", hash = "sha256:c99c23d1c6e2a27fd45794262e2ac07befaef9603a86e4e325a9e980cad8c78d"},
+    {file = "streamlit_js_eval-0.1.7.tar.gz", hash = "sha256:af80eff45e2f23a676588578aff7d2790080360528c656f4a4476c1484574c97"},
+]
+
+[package.dependencies]
+streamlit = ">=1.0.0"
 
 [[package]]
 name = "streamlit-keyup"
@@ -2438,7 +2504,18 @@ files = [
 [package.extras]
 watchmedo = ["PyYAML (>=3.10)"]
 
+[[package]]
+name = "xyzservices"
+version = "2024.6.0"
+description = "Source of XYZ tiles providers"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "xyzservices-2024.6.0-py3-none-any.whl", hash = "sha256:fecb2508f0f2b71c819aecf5df2c03cef001c56a4b49302e640f3b34710d25e4"},
+    {file = "xyzservices-2024.6.0.tar.gz", hash = "sha256:58c1bdab4257d2551b9ef91cd48571f77b7c4d2bc45bf5e3c05ac97b3a4d7282"},
+]
+
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10.0,<3.12"
-content-hash = "6e5e248214037d7c47ce1ede53207ce46ab9d3fe8037a18e2128d36e22005ebd"
+content-hash = "f430c33444452428db9034aa8815ac3177080ce78f865ab17b970ada72846cea"
