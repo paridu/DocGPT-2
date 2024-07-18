@@ -7,46 +7,23 @@ from streamlit_mic_recorder import speech_to_text
 from streamlit_geolocation import streamlit_geolocation
 
 client = OpenAI(api_key=os.environ['OPENAI_API_KEY'])
+sys_prompt = open("prompt.txt").read()
 
-
-def reset():
+def clear_chat():
     st.session_state.messages = [{
         "role":
         "system",
-        "content":
-        """
-        As a healthcare assistant, your role is to assist users with their health-related queries, offering guidance and support as needed. When interacting with users, remember to respond in the same language that they use, ensuring clear communication. Your goal is to diagnose the patient with a specific condition based on the symptoms provided and explain it in simple terms for easy understanding.
-
-        If the user's symptoms are vague, feel free to ask more questions to narrow down the diagnosis, unless the user specifically seeks pain relief and not a detailed diagnosis. After diagnosing the condition, recommend medications if applicable, or provide home remedies if medications are not readily available or accessible to the user.
-
-        In case the patient sounds worried, it's important to offer empathy and reassurance in your response. Additionally, be prepared for users to upload images of their injuries or pills. When describing the images, consider the symptoms mentioned, provide a concise assessment of the situation, explain the consequences, and offer guidance on the next steps to take.
-
-        If the user uploads images of pills, describe how often they should be taken, and if necessary, translate the instructions into their native language to ensure clear understanding and compliance. Remember to adjust your responses based on the information provided by the user, offering tailored support and recommendations throughout the interaction.
-        """
+        "content": sys_prompt
     }]
     img_prompt = None
-
-
-bc = st.get_option("theme.backgroundColor")
-st.markdown("""
-<style>
-    div[data-testid="stVerticalBlock"] div:has(div.fixed-header) {
-        position: sticky;
-        top: 1rem;
-        z-index: 999;
-        width: 100%;        
-        background-color: """ + bc + """;
-    }
-</style>
-    """,
-            unsafe_allow_html=True)
+    st.session_state.my_stt_output = None
 
 def initialize_session():
     if "openai_model" not in st.session_state:
         st.session_state["openai_model"] = "gpt-3.5-turbo"
     
     if "messages" not in st.session_state:
-        reset()
+        clear_chat()
     
     if "uploaded_images" not in st.session_state:
         st.session_state.uploaded_images = []
@@ -61,6 +38,20 @@ def speech_to_text_callback():
         st.write(st.session_state.my_stt_output)
 
 def main():
+    bc = st.get_option("theme.backgroundColor")
+    st.markdown("""
+    <style>
+        div[data-testid="stVerticalBlock"] div:has(div.fixed-header) {
+            position: sticky;
+            top: 1rem;
+            z-index: 999;
+            width: 100%;        
+            background-color: """ + bc + """;
+        }
+    </style>
+        """,
+                unsafe_allow_html=True)
+
     header = st.container()
     header.write("""<div class='fixed-header'>""", unsafe_allow_html=True)
 
@@ -79,7 +70,7 @@ def main():
 
     with st.sidebar:
         if st.button("Clear Chat"):
-            reset()
+            clear_chat()
 
         with st.spinner('Processing...'):
             stt = speech_to_text(language='en',
