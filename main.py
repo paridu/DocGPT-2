@@ -4,7 +4,6 @@ import base64
 from openai import OpenAI
 from streamlit.elements.image import UseColumnWith
 from streamlit_mic_recorder import speech_to_text
-from streamlit_geolocation import streamlit_geolocation
 from streamlit_extras.stylable_container import stylable_container
 from streamlit_modal import Modal
 from streamlit_js_eval import get_geolocation
