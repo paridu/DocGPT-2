@@ -1,11 +1,12 @@
-from openai import OpenAI
 import streamlit as st
 import os
-from PIL import Image
 import base64
-from mimetypes import guess_type
+from openai import OpenAI
+from streamlit_mic_recorder import speech_to_text
+from streamlit_geolocation import streamlit_geolocation
 
 client = OpenAI(api_key=os.environ['OPENAI_API_KEY'])
+
 
 def reset():
     st.session_state.messages = [{
@@ -14,15 +15,16 @@ def reset():
         "content":
         """
         As a healthcare assistant, your role is to assist users with their health-related queries, offering guidance and support as needed. When interacting with users, remember to respond in the same language that they use, ensuring clear communication. Your goal is to diagnose the patient with a specific condition based on the symptoms provided and explain it in simple terms for easy understanding.
-        
+
         If the user's symptoms are vague, feel free to ask more questions to narrow down the diagnosis, unless the user specifically seeks pain relief and not a detailed diagnosis. After diagnosing the condition, recommend medications if applicable, or provide home remedies if medications are not readily available or accessible to the user.
-        
+
         In case the patient sounds worried, it's important to offer empathy and reassurance in your response. Additionally, be prepared for users to upload images of their injuries or pills. When describing the images, consider the symptoms mentioned, provide a concise assessment of the situation, explain the consequences, and offer guidance on the next steps to take.
-        
+
         If the user uploads images of pills, describe how often they should be taken, and if necessary, translate the instructions into their native language to ensure clear understanding and compliance. Remember to adjust your responses based on the information provided by the user, offering tailored support and recommendations throughout the interaction.
         """
     }]
     img_prompt = None
+
 
 bc = st.get_option("theme.backgroundColor")
 st.markdown("""
@@ -37,13 +39,15 @@ st.markdown("""
     .fixed-header {
         """ + bc + """
     }
+    [data-testid=stSidebar] [data-testid=stText]{
+        text-align: center;
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+        width: 100%;
+    }
 </style>
-    """,
-            unsafe_allow_html=True)
-
-header = st.container()
-header.title("DocGPT - Healthcare Assistant")
-header.write("""<div class='fixed-header'>""", unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
 
 if "openai_model" not in st.session_state:
     st.session_state["openai_model"] = "gpt-3.5-turbo"
@@ -51,28 +55,55 @@ if "openai_model" not in st.session_state:
 if "messages" not in st.session_state:
     reset()
 
-with header:
-    button_row = st.columns([30, 7], vertical_alignment="center")
-    with button_row[0]:
-        img_prompt = st.file_uploader('', type=["jpg", "jpeg", "png"])
-    with button_row[1]:
-        if st.button("Clear Chat"):
-            reset()
-header.write("""</div>""", unsafe_allow_html=True)
+if "uploaded_images" not in st.session_state:
+    st.session_state.uploaded_images = []
 
+header = st.container()
+header.write("""<div class='fixed-header'>""", unsafe_allow_html=True)
+
+with header:
+    logo_columns = st.columns([20, 10])
+    with logo_columns[0]:
+        st.image('assets/docgptLogo.png')
+header.write("""</div>""", unsafe_allow_html=True)
 
 for message in st.session_state.messages:
     if message["role"] != "system":
         with st.chat_message(message["role"]):
-                st.markdown(message["content"])
+            st.markdown(message["content"])
 
 prompt = st.chat_input("Ask me anything!")
+
+with st.sidebar:
+    if st.button("Clear Chat"):
+        reset()
+    def callback():
+        if st.session_state.my_stt_output:
+            st.write(st.session_state.my_stt_output)
+    
+    with st.spinner('Processing...'):
+        stt = speech_to_text(language='en',
+                         key='my_stt',
+                         callback=callback,
+                         just_once=True)
+        text_container = st.container()
+        with text_container:
+            if stt:
+                st.write("You said: \n")
+                st.write(stt)
+            else:
+                st.write("No speech detected")
+    if st.session_state.my_stt_output:
+        prompt = st.session_state.my_stt_output
+
+    img_prompt = st.file_uploader('', type=["jpg", "jpeg", "png"])
+    if img_prompt:
+        st.write("Uploaded Image")
+        st.image(img_prompt, use_column_width='auto')
 
 
 def encode_image(image):
     return base64.b64encode(image.read()).decode('utf-8')
-
-base64_image = None 
 
 if img_prompt:
     base64_image = encode_image(img_prompt)
@@ -81,21 +112,29 @@ if img_prompt:
 
 if prompt or img_prompt:
     if prompt:
-        st.session_state.messages.append({"role": "user", "content": prompt})
+        st.session_state.messages.append({
+            "role": "user",
+            "content": prompt
+        })
     elif img_prompt:
         st.session_state.messages.append({
-            "role": "user", 
-            "content": [
-                {"type": "image_url", "image_url": {"url": img_url}}
-            ]
+            "role":
+            "user",
+            "content": [{
+                "type": "image_url",
+                "image_url": {
+                    "url": img_url
+                }
+            }]
         })
+        st.session_state.uploaded_images.append(img_prompt)
         st.session_state["openai_model"] = "gpt-4o"
 
     with st.chat_message("user"):
         if prompt:
             st.markdown(prompt)
-        elif img_prompt:
-            st.image(img_prompt, use_column_width='auto')
+        if img_prompt:
+            st.markdown("User uploaded an image")
 
     with st.chat_message("assistant"):
         stream = client.chat.completions.create(
