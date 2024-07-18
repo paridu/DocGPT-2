@@ -2,6 +2,7 @@ import streamlit as st
 import os
 import base64
 from openai import OpenAI
+from streamlit.elements.image import UseColumnWith
 from streamlit_mic_recorder import speech_to_text
 from streamlit_geolocation import streamlit_geolocation
 
@@ -31,7 +32,7 @@ st.markdown("""
 <style>
     div[data-testid="stVerticalBlock"] div:has(div.fixed-header) {
         position: sticky;
-        top: 2rem;
+        top: 1rem;
         z-index: 999;
         width: 100%;        
         background-color: """ + bc + """;
@@ -47,7 +48,8 @@ st.markdown("""
         width: 100%;
     }
 </style>
-    """, unsafe_allow_html=True)
+    """,
+            unsafe_allow_html=True)
 
 if "openai_model" not in st.session_state:
     st.session_state["openai_model"] = "gpt-3.5-turbo"
@@ -62,9 +64,9 @@ header = st.container()
 header.write("""<div class='fixed-header'>""", unsafe_allow_html=True)
 
 with header:
-    logo_columns = st.columns([20, 10])
-    with logo_columns[0]:
-        st.image('assets/docgptLogo.png')
+    logo_columns = st.columns([5, 25, 5])
+    with logo_columns[1]:
+        st.image('assets/docgptLogo.png', use_column_width=True)
 header.write("""</div>""", unsafe_allow_html=True)
 
 for message in st.session_state.messages:
@@ -77,15 +79,16 @@ prompt = st.chat_input("Ask me anything!")
 with st.sidebar:
     if st.button("Clear Chat"):
         reset()
+
     def callback():
         if st.session_state.my_stt_output:
             st.write(st.session_state.my_stt_output)
-    
+
     with st.spinner('Processing...'):
         stt = speech_to_text(language='en',
-                         key='my_stt',
-                         callback=callback,
-                         just_once=True)
+                             key='my_stt',
+                             callback=callback,
+                             just_once=True)
         text_container = st.container()
         with text_container:
             if stt:
@@ -105,6 +108,7 @@ with st.sidebar:
 def encode_image(image):
     return base64.b64encode(image.read()).decode('utf-8')
 
+
 if img_prompt:
     base64_image = encode_image(img_prompt)
     img_type = img_prompt.type
@@ -112,10 +116,7 @@ if img_prompt:
 
 if prompt or img_prompt:
     if prompt:
-        st.session_state.messages.append({
-            "role": "user",
-            "content": prompt
-        })
+        st.session_state.messages.append({"role": "user", "content": prompt})
     elif img_prompt:
         st.session_state.messages.append({
             "role":
