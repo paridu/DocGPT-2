@@ -421,22 +421,14 @@ def main():
                     "content": prompt
                 })
             elif img_prompt:
-                messages=[
+                st.session_state.current_session.append(
                     {"role": "system", "content": "Describe this in 10 words or less. "},
                     {"role": "user", "content": [{
                         "type": "image_url",
                         "image_url": {
                             "url": img_url
-                        }
-                    }]}
-                ]
-                img_description = CLIENT.chat.completions.create(model=st.session_state["openai_model"], messages=messages).choices[0].message.content
-
-                st.session_state.current_session.append({
-                    "role":
-                    "user",
-                    "content": img_description
-                })
+                            }
+                        }]})
 
             with st.chat_message("user"):
                 if prompt:
