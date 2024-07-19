@@ -71,17 +71,21 @@ def save_current_chat():
 
     # key = generated title, value = chat session messages
     if len(curr_session) > 1:
-        title_prompt = "Please generate a short, concise title based on the following message. Maximum of 30 characters, no quotation marks."
-        first_user_message = curr_session[1]["content"]
-        title = CLIENT.chat.completions.create(
-            model=st.session_state["openai_model"],
-            messages=[{
-                "role": "user",
-                "content": title_prompt + first_user_message
-            }],
-        ).choices[0].message.content
+        if not st.session_state.current_session_title:
+            title_prompt = "Please generate a short, concise title based on the following message. Maximum of 30 characters, no quotation marks."
+            first_user_message = curr_session[1]["content"]
+            title = CLIENT.chat.completions.create(
+                model=st.session_state["openai_model"],
+                messages=[{
+                    "role": "user",
+                    "content": title_prompt + first_user_message
+                }],
+            ).choices[0].message.content
+            st.session_state.current_session_title = title
+        else:
+            title = st.session_state.current_session_title
+        
         sessions[title] = curr_session
-
 
 def load_chat(session):
     if session != st.session_state.current_session:
@@ -120,6 +124,7 @@ def update_sidebar():
 
 def enter_details():
     with st.form(key="details_form"):
+        st.markdown("Your information is kept private and will be :red[deleted] after swapping sessions.")
         gender = st.selectbox("Gender", ["Male", "Female"])
         age = st.number_input("Age", min_value=0, max_value=120, step=1)
         height = st.number_input("Height (cm)", min_value=0, step=1)
