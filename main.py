@@ -98,10 +98,10 @@ def save_current_chat():
 def load_chat(session):
     if session != st.session_state.current_session:
         save_current_chat()
-        with st.session_state.chat_container:
-            for message in session[1:]:
-                with st.chat_message(message["role"]):
-                    st.markdown(message["content"])
+        # with st.session_state.chat_container:
+        #     for message in session[1:]:
+        #         with st.chat_message(message["role"]):
+        #             st.markdown(message["content"])
         
         st.session_state.current_session = session
         key_to_swap = None
