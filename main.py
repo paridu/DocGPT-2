@@ -101,8 +101,8 @@ def load_chat(session):
                     st.markdown(message["content"])
         st.session_state.current_session = session
         key_to_swap = None
-        for key, session in st.session_state.chat_sessions.items():
-            if session == st.session_state.current_session:
+        for key, st_session in st.session_state.chat_sessions.items():
+            if session == st_session:
                 key_to_swap = key
                 break
         st.session_state.current_session_title = key_to_swap
