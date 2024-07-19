@@ -88,8 +88,8 @@ def save_current_chat():
             st.session_state.current_session_title = title
         else:
             title = st.session_state.current_session_title
-        
-        sessions[title] = curr_session
+        if not isinstance(title, list):
+            sessions[title] = curr_session
 
 def load_chat(session):
     if session != st.session_state.current_session:
