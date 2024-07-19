@@ -27,6 +27,7 @@ def clear_chat():
         "content": SYS_PROMPT
     }]
     st.session_state.stt_output = None
+    st.session_state.current_session_title = ""
 
 
 def initialize_session():
@@ -101,7 +102,7 @@ def load_chat(session):
         key_to_swap = None
         for key, session in st.session_state.chat_sessions.items():
             if session == st.session_state.current_session:
-                key_to_swap = key
+                key_to_delete = key
                 break
         st.session_state.current_session_title = key_to_swap
 
@@ -311,7 +312,7 @@ def main():
     ### INPUT CONTAINER ###
 
     with st.session_state.input_container:
-        img_prompt = st.file_uploader('', type=["jpg", "jpeg", "png", "pdf"])
+        img_prompt = st.file_uploader('', type=["jpg", "jpeg", "png"])
         if img_prompt:
             img_url = encode_image_url(img_prompt)
         input_cols = st.columns((12, 1))
