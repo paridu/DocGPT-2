@@ -50,6 +50,9 @@ def initialize_session():
     if 'find_clinics_button_clicked' not in st.session_state:
         st.session_state.find_clinics_button_clicked = False
 
+    if 'show_modal' not in st.session_state:
+        st.session_state.show_modal = False
+
 
 def encode_image_url(image):
     base64_image = base64.b64encode(image.read()).decode('utf-8')
@@ -195,7 +198,17 @@ def get_nearest_clinics(lat, lon):
     return clinics
 
 # def check_nearest_clinics():
-
+def add_sidebar_divider(text):
+    st.sidebar.markdown(
+        f"""
+        <div style="display: flex; align-items: center; text-align: center;">
+            <hr style="flex-grow: 1; height: 1px; border: none; background-color: #E0E0E0;"/>
+            <span style="flex-shrink: 0; padding: 0 10px; font-size: 12px; color: #999999;">{text}</span>
+            <hr style="flex-grow: 1; height: 1px; border: none; background-color: #E0E0E0;"/>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 def main():
     st.markdown("""
@@ -237,6 +250,7 @@ def main():
         find_clinics_button = st.button("Find nearby clinics", type='primary')
         if find_clinics_button:
             st.session_state.find_clinics_button_clicked = True
+            st.session_state.show_modal = True
             # modal = Modal(key="clinics", title="Find nearby clinics")
             # with st.session_state.chat_container:
             #     with st.spinner('Searching...'):
@@ -246,8 +260,9 @@ def main():
         if st.button("Create new chat", type='primary'):
             save_current_chat()
             clear_chat()
+        add_sidebar_divider("Chat sessions")
+        
     update_sidebar()
-
     st.markdown(f"""
     <style>
         div[data-testid="stVerticalBlock"] div:has(div.fixed-header) {{
@@ -305,9 +320,11 @@ def main():
 
     #checked = st.checkbox("Check my location")
     #checked = st.button("Clinics")
-    if st.session_state.find_clinics_button_clicked:
+    if st.session_state.show_modal:
         modal = Modal(key="clinics", title="Find nearby clinics")
         with modal.container():
+            if st.button("Close"):
+                st.session_state.show_modal = False
             loc = get_geolocation()
             if loc:
                 lat = loc['coords']['latitude']
