@@ -99,6 +99,7 @@ def load_chat(session):
             for message in session[1:]:
                 with st.chat_message(message["role"]):
                     st.markdown(message["content"])
+        
         st.session_state.current_session = session
         key_to_swap = None
         for key, st_session in st.session_state.chat_sessions.items():
