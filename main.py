@@ -11,6 +11,7 @@ import requests
 from geopy.distance import geodesic
 from streamlit_folium import folium_static
 import folium
+import time
 
 GOOGLE_API_KEY = os.environ['GOOGLE_MAP_API']
 NEARBY_SEARCH_URL = f"https://maps.googleapis.com/maps/api/place/nearbysearch/json"
@@ -23,7 +24,7 @@ LOGO_PATH = 'assets/logo.png'
 def clear_chat():
     st.session_state.current_session = [{
         "role": "system",
-        "content": SYS_PROMPT + st.session_state.user_details_prompt
+        "content": SYS_PROMPT
     }]
     st.session_state.stt_output = None
 
@@ -34,20 +35,20 @@ def initialize_session():
     st.session_state.input_container = st.container()
 
     if "openai_model" not in st.session_state:
-        st.session_state["openai_model"] = "gpt-3.5-turbo"
+        st.session_state["openai_model"] = "gpt-4o-mini"
 
     if "chat_sessions" not in st.session_state:
         st.session_state.chat_sessions = dict()
-
-    if "user_details_prompt" not in st.session_state:
-        st.session_state.user_details_prompt = ""
-
+    
     if "current_session" not in st.session_state:
         st.session_state.current_session = []
         clear_chat()
 
     if "uploaded_images" not in st.session_state:
         st.session_state.uploaded_images = []
+
+    if 'find_clinics_button_clicked' not in st.session_state:
+        st.session_state.find_clinics_button_clicked = False
 
 
 def encode_image_url(image):
@@ -64,8 +65,18 @@ def speech_to_text_callback():
 def save_current_chat():
     sessions = st.session_state.chat_sessions
     curr_session = st.session_state.current_session
+
+    # key = generated title, value = chat session messages
     if len(curr_session) > 1:
-        title = curr_session[1]["content"]
+        title_prompt = "Please generate a short, concise title based on the following message. Maximum of 30 characters, no quotation marks."
+        first_user_message = curr_session[1]["content"]
+        title = CLIENT.chat.completions.create(
+            model=st.session_state["openai_model"],
+            messages=[{
+                "role": "user",
+                "content": title_prompt + first_user_message
+            }],
+        ).choices[0].message.content
         sessions[title] = curr_session
 
 
@@ -76,13 +87,21 @@ def load_chat(session):
             for message in session[1:]:
                 with st.chat_message(message["role"]):
                     st.markdown(message["content"])
-        st.session_state.curr_session = session
+        st.session_state.current_session = session
 
 
 def delete_current_chat():
-    if len(st.session_state.current_session) > 1:
-        st.session_state.chat_sessions.pop(
-            st.session_state.current_session[1]["content"])
+    key_to_delete = None
+    for key, session in st.session_state.chat_sessions.items():
+        if session == st.session_state.current_session:
+            key_to_delete = key
+            break
+
+    if key_to_delete:
+        del st.session_state.chat_sessions[key_to_delete]
+        success = st.success(f"Deleting session: {key_to_delete}")
+        time.sleep(1.5)
+        success.empty()
         update_sidebar()
         clear_chat()
     if not len(st.session_state.chat_sessions):
@@ -106,14 +125,14 @@ def enter_details():
             if age == 0 or height == 0 or weight == 0:
                 st.error("Please ensure all fields are filled out correctly.")
             else:
-                st.session_state['user_details_prompt'] = f"""
-                Keep in mind of the following details about the user,
-                and use it to make a more informed diagnosis.
+                st.session_state.current_session[0] = {"role": "system",
+                "content": SYS_PROMPT + f"""
+                Keep in mind of the following details about the user, and use it to make a more informed diagnosis.
                 Gender: {gender}
                 Age: {age} years old
                 Height: {height} cm
                 Weight: {weight} kg
-                """
+                """}
                 st.success("Details submitted successfully!")
 
 def get_nearest_clinics(lat, lon):
@@ -175,60 +194,8 @@ def get_nearest_clinics(lat, lon):
 
     return clinics
 
-def check_nearest_clinics():
-    loc = get_geolocation()
-    st.text(loc)
-    if loc:
-        lat = loc['coords']['latitude']
-        lon = loc['coords']['longitude']
-        st.write(f"Your coordinates are Latitude: {lat}, Longitude: {lon}")
+# def check_nearest_clinics():
 
-        nearest_clinics = get_nearest_clinics(lat, lon)
-        if nearest_clinics:
-            st.success('Top 5 Nearest Clinics/Hospitals:')
-            for index, clinic in enumerate(nearest_clinics, start=1):
-                st.write(f"**Clinic/Hospital {index}:**")
-                st.write(f"Name: {clinic['Name']}")
-                st.write(f"Address: {clinic['Address']}")
-                st.write(f"Distance: {clinic['Distance']:.2f} km")
-                st.write("Status: Open Now")
-                if clinic['Photos']:
-                    st.write("Images:")
-                    for photo_url in clinic['Photos']:
-                        st.image(photo_url, width=150)
-
-            m = folium.Map(location=[lat, lon], zoom_start=12)
-
-            folium.Marker([lat, lon],
-                          tooltip="You are here",
-                          icon=folium.Icon(color='blue')).add_to(m)
-
-            for clinic in nearest_clinics:
-                tooltip_content = f"<strong>{clinic['Name']}</strong><br>{clinic['Address']}<br>Distance: {clinic['Distance']:.2f} km"
-                if clinic['Photos']:
-                    tooltip_content += f"<br><br><img src='{clinic['Photos'][0]}' width='200'>"
-
-                popup_content = f"<strong>{clinic['Name']}</strong><br>{clinic['Address']}<br>Distance: {clinic['Distance']:.2f} km"
-
-                if clinic['Photos']:
-                    popup_content += f"<br><br><img src='{clinic['Photos'][0]}' width='200'>"
-
-                folium.Marker(location=[
-                    clinic['Coordinates'][1], clinic['Coordinates'][0]
-                ],
-                              tooltip=folium.Tooltip(tooltip_content,
-                                                     sticky=True),
-                              popup=popup_content,
-                              icon=folium.Icon(color='red')).add_to(m)
-
-            folium_static(m)
-            return
-        else:
-            st.error('No clinics found near the given location.')
-            return
-    else:
-        st.warning('Please enable location access.')
-        return
 
 def main():
     st.markdown("""
@@ -267,11 +234,13 @@ def main():
     with st.sidebar:
         with st.popover(":blue[Enter your details]"):
             enter_details()
-        if st.button("Find nearby clinics", type='primary'):
+        find_clinics_button = st.button("Find nearby clinics", type='primary')
+        if find_clinics_button:
+            st.session_state.find_clinics_button_clicked = True
             # modal = Modal(key="clinics", title="Find nearby clinics")
-            with st.session_state.chat_container:
-                with st.spinner('Searching...'):
-                    check_nearest_clinics()
+            # with st.session_state.chat_container:
+            #     with st.spinner('Searching...'):
+            #         check_nearest_clinics()
         if st.button("Delete current chat", type='primary'):
             delete_current_chat()
         if st.button("Create new chat", type='primary'):
@@ -315,8 +284,6 @@ def main():
     with st.session_state.input_container:
         img_prompt = st.file_uploader('', type=["jpg", "jpeg", "png"])
         if img_prompt:
-            st.write("Uploaded Image")
-            st.image(img_prompt, use_column_width='auto')
             img_url = encode_image_url(img_prompt)
         input_cols = st.columns((12, 1))
         with input_cols[0]:
@@ -336,6 +303,70 @@ def main():
     input_container.write("""<div class='fixed-header'>""",
                           unsafe_allow_html=True)
 
+    #checked = st.checkbox("Check my location")
+    #checked = st.button("Clinics")
+    if st.session_state.find_clinics_button_clicked:
+        modal = Modal(key="clinics", title="Find nearby clinics")
+        with modal.container():
+            loc = get_geolocation()
+            if loc:
+                lat = loc['coords']['latitude']
+                lon = loc['coords']['longitude']
+                st.write(f"Your coordinates are Latitude: {lat}, Longitude: {lon}")
+
+                nearest_clinics = get_nearest_clinics(lat, lon)
+                if nearest_clinics:
+                    st.success('Top 5 Nearest Clinics/Hospitals:')
+                    for index, clinic in enumerate(nearest_clinics, start=1):
+                        st.write(f"**Clinic/Hospital {index}:**")
+                        st.write(f"Name: {clinic['Name']}")
+                        st.write(f"Address: {clinic['Address']}")
+                        st.write(f"Distance: {clinic['Distance']:.2f} km")
+                        st.write("Status: Open Now")
+                        if clinic['Photos']:
+                            st.write("Images:")
+                            for photo_url in clinic['Photos']:
+                                st.image(photo_url)
+
+                    m = folium.Map(location=[lat, lon], zoom_start=12)
+
+                    # Add current location marker
+                    folium.Marker(
+                        [lat, lon], 
+                        tooltip="You are here", 
+                        icon=folium.Icon(color='blue')
+                    ).add_to(m)
+
+                    # Add markers for clinics
+                    for clinic in nearest_clinics:
+                        # Tooltip with image (if available)
+                        tooltip_content = f"""<strong>{clinic['Name']}</strong><br>
+                          {clinic['Address']}<br>
+                          Distance: {clinic['Distance']:.2f} km<br>
+                          Status: Open Now"""
+                        if clinic['Photos']:
+                            tooltip_content += f"<br><br><img src='{clinic['Photos'][0]}' width='200'>"
+
+                        # Popup with business hours and one image (if available)
+                        popup_content = f"<strong>{clinic['Name']}</strong><br>{clinic['Address']}<br>Distance: {clinic['Distance']:.2f} km<br>Status: Open Now"
+
+                        if clinic['Photos']:
+                            popup_content += f"<br><br><img src='{clinic['Photos'][0]}' width='200'>"
+
+                        folium.Marker(
+                            location=[clinic['Coordinates'][1], clinic['Coordinates'][0]], 
+                            tooltip=folium.Tooltip(tooltip_content, sticky=True),
+                            popup=popup_content,
+                            icon=folium.Icon(color='red')
+                        ).add_to(m)
+
+                    folium_static(m)
+                else:
+                    st.error('No clinics found near the given location.')
+            else:
+                st.warning('Please enable location access.')
+        
+
     ### CHAT CONTAINER ###
     with st.session_state.chat_container:
         for message in st.session_state.current_session:
@@ -350,24 +381,28 @@ def main():
                     "content": prompt
                 })
             elif img_prompt:
-                st.session_state.current_session.append({
-                    "role":
-                    "user",
-                    "content": [{
+                messages=[
+                    {"role": "system", "content": "Describe this in 10 words or less. "},
+                    {"role": "user", "content": [{
                         "type": "image_url",
                         "image_url": {
                             "url": img_url
                         }
-                    }]
+                    }]}
+                ]
+                img_description = CLIENT.chat.completions.create(model=st.session_state["openai_model"], messages=messages).choices[0].message.content
+
+                st.session_state.current_session.append({
+                    "role":
+                    "user",
+                    "content": img_description
                 })
-                st.session_state.uploaded_images.append(img_prompt)
-                st.session_state["openai_model"] = "gpt-4o"
 
             with st.chat_message("user"):
                 if prompt:
                     st.markdown(prompt)
                 if img_prompt:
-                    st.markdown("Uploaded image")
+                    st.image(img_prompt, use_column_width='auto')
             with st.spinner('Processing...'), st.chat_message("assistant"):
                 stream = CLIENT.chat.completions.create(
                     model=st.session_state["openai_model"],
@@ -385,9 +420,6 @@ def main():
             save_current_chat()
             if len(st.session_state.current_session) == 3:
                 update_sidebar()
-            if img_prompt:
-                st.session_state.current_session.pop(-2)
-                st.session_state["openai_model"] = "gpt-3.5-turbo"
     hide_streamlit_style = """
                 <style>
                 footer {visibility: hidden;}
