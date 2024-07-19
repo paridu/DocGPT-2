@@ -53,6 +53,9 @@ def initialize_session():
     if 'show_modal' not in st.session_state:
         st.session_state.show_modal = False
 
+    if 'current_session_title' not in st.session_state:
+        st.session_state.current_session_title = ""
+
 
 def encode_image_url(image):
     base64_image = base64.b64encode(image.read()).decode('utf-8')
@@ -95,6 +98,12 @@ def load_chat(session):
                 with st.chat_message(message["role"]):
                     st.markdown(message["content"])
         st.session_state.current_session = session
+        key_to_swap = None
+        for key, session in st.session_state.chat_sessions.items():
+            if session == st.session_state.current_session:
+                key_to_swap = key
+                break
+        st.session_state.current_session_title = key_to_swap
 
 
 def delete_current_chat():
@@ -302,7 +311,7 @@ def main():
     ### INPUT CONTAINER ###
 
     with st.session_state.input_container:
-        img_prompt = st.file_uploader('', type=["jpg", "jpeg", "png"])
+        img_prompt = st.file_uploader('', type=["jpg", "jpeg", "png", "pdf"])
         if img_prompt:
             img_url = encode_image_url(img_prompt)
         input_cols = st.columns((12, 1))
@@ -330,6 +339,7 @@ def main():
         with modal.container():
             if st.button("Close"):
                 st.session_state.show_modal = False
+                st.experimental_rerun()  
             loc = get_geolocation()
             if loc:
                 lat = loc['coords']['latitude']
