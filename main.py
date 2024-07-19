@@ -57,6 +57,9 @@ def initialize_session():
     if 'current_session_title' not in st.session_state:
         st.session_state.current_session_title = ""
 
+    if 'titles_list' not in st.session_state:
+        st.session_state.titles_list = []
+
 
 def encode_image_url(image):
     base64_image = base64.b64encode(image.read()).decode('utf-8')
@@ -86,11 +89,11 @@ def save_current_chat():
                 }],
             ).choices[0].message.content
             st.session_state.current_session_title = title
+            st.session_state.titles_list.append(title)
         else:
             title = st.session_state.current_session_title
         if not isinstance(title, list):
             sessions[title] = curr_session
-        st.session_state.current_session_title = ""
 
 def load_chat(session):
     if session != st.session_state.current_session:
@@ -115,6 +118,8 @@ def delete_current_chat():
         if session == st.session_state.current_session:
             key_to_delete = key
             break
+    
+    st.session_state.titles_list.remove(key_to_delete)
 
     if key_to_delete:
         del st.session_state.chat_sessions[key_to_delete]
