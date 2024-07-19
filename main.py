@@ -90,6 +90,7 @@ def save_current_chat():
             title = st.session_state.current_session_title
         if not isinstance(title, list):
             sessions[title] = curr_session
+        st.session_state.current_session_title = ""
 
 def load_chat(session):
     if session != st.session_state.current_session:
@@ -102,7 +103,7 @@ def load_chat(session):
         key_to_swap = None
         for key, session in st.session_state.chat_sessions.items():
             if session == st.session_state.current_session:
-                key_to_delete = key
+                key_to_swap = key
                 break
         st.session_state.current_session_title = key_to_swap
 
