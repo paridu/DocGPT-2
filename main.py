@@ -422,7 +422,6 @@ def main():
                 })
             elif img_prompt:
                 st.session_state.current_session.append(
-                    {"role": "system", "content": "Describe this in 10 words or less. "},
                     {"role": "user", "content": [{
                         "type": "image_url",
                         "image_url": {
